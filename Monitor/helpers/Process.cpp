@@ -4,7 +4,7 @@
 #include "Process.h"
 #include "UtilString.h"
 
-bool Process::create(char* cmd)
+bool Process::create(char* cmd, std::string path)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -17,7 +17,7 @@ bool Process::create(char* cmd)
 
     
 
-    bool ok = CreateProcess(NULL, cmd, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
+    bool ok = CreateProcess(NULL, cmd, NULL, NULL,FALSE, CREATE_NEW_CONSOLE , NULL, path.c_str(), &si, &pi);
     m_process = pi.hProcess;
     m_thread = pi.hThread;
     m_init = ok;
@@ -40,4 +40,12 @@ void Process::terminate()
     CloseHandle(m_process);
     CloseHandle(m_thread);
     m_init = false;
+}
+
+void Process::suspend() {
+    SuspendThread(m_thread);
+}
+
+void Process::resume() {
+    ResumeThread(m_thread);
 }

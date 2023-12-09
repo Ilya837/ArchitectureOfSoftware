@@ -9,43 +9,15 @@
 bool Server::init(int port)
 {
 
-    
-
-    
-   /* std::string filePort = "No";
-
-    std::ifstream file("\\resources\\CREATED", std::ios::binary);
-    if (file) {
-
-        std::string Info;
-        std::getline(file, Info);
-        filePort = Info.substr(0, Info.find(","));
-
-
-
-        if (!m_socket.init(1000) || !m_socket.listen(std::stoi(filePort)))
-            return false;
-    }
-    else {
-
-        if (!m_socket.init(1000) || !m_socket.listen(port))
-            return false;
-
-        if (!fileWriteExclusive("resources\\CREATED", toStr(m_socket.port()) + "," + toStr(_getpid())))
-            return false;
-    }
-
-    file.close();*/
-
     if (!m_socket.init(1000) || !m_socket.listen(port))
         return false;
 
-    if (!fileWriteExclusive("resources\\CREATED", toStr(m_socket.port()) + "," + toStr(_getpid())))
+    if (!fileWriteExclusive("..\\resources\\CREATED", toStr(m_socket.port()) + "," + toStr(_getpid())))
         return false;
 
     printf("server started: port %d, pid %d\n", m_socket.port(), _getpid());
 
-    char* state = fileReadStr("resources\\STATE"); // load state from previous run
+    char* state = fileReadStr(".\\resources\\STATE"); // load state from previous run
     if(state)
     {
         for(std::string& line : split(state, "\n"))
@@ -65,7 +37,7 @@ void Server::run()
 
     while(1)
     {
-        fileWriteStr(std::string("resources\\ALIVE") + toStr(_getpid()), ""); // pet the watchdog
+        fileWriteStr(std::string("..\\resources\\ALIVE") + toStr(_getpid()), ""); // pet the watchdog
         std::shared_ptr<Socket> client = m_socket.accept(); // accept incoming connection
         if(!client->isValid())
             continue;
@@ -133,7 +105,7 @@ void Server::run()
 
             if (tokens[0] == "msg") {
                 m_data.push_back(std::string(data).substr(4)); // store it in the feed
-                fileAppend("resources\\STATE", m_data.back() + "\n"); // store it in the file for subsequent runs
+                fileAppend(".\\resources\\STATE", m_data.back() + "\n"); // store it in the file for subsequent runs
             }
             else{
 
@@ -141,7 +113,7 @@ void Server::run()
                 struct tm* now = localtime(&t);
 
                 char buffer[80];
-                strftime(buffer,80, "resources\\%Y-%m-%d-%I-%M-%S.", now);
+                strftime(buffer,80, "..\\resources\\%Y-%m-%d-%I-%M-%S.", now);
 
                 int typeLength = 1 + (tokens[0]).length();
 
@@ -158,7 +130,7 @@ void Server::run()
                 file.close();
 
                 m_data.push_back(std::string(buffer + tokens[0])); // store it in the feed
-                fileAppend("resources\\STATE", m_data.back() + "\n"); // store it in the file for subsequent runs
+                fileAppend(".\\resources\\STATE", m_data.back() + "\n"); // store it in the file for subsequent runs
 
 
             }

@@ -1,7 +1,4 @@
 ﻿  AppServer.cpp
   AppServerMain.cpp
-  Socket.cpp
-C:\Users\miker\source\repos\Project1\Server\helpers\Socket.cpp(65,26): warning C4018: <: несоответствие типов со знаком и без знака
-  SocketServer.cpp
   Создание кода...
   Server.vcxproj -> C:\Users\miker\source\repos\Project1\Debug\Server.exe

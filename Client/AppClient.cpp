@@ -31,9 +31,6 @@ bool Client::send(const std::string& url, const std::string& msg)
 
     std::ifstream file(msg);
     if ( file) {
-        
-
-            
 
             std::ifstream fileBin(msg, std::ios::binary);
 

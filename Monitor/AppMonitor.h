@@ -10,6 +10,8 @@ public:
     bool init(); // launches Server
     bool check(); // checks Server state
     static void reset(); // terminates irresponsive Server
+    static void terminate();
+    void Synchronise();
 
 private:
     Console m_console;
