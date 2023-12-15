@@ -10,6 +10,7 @@
 #include "helpers/UtilString.h"
 #include "helpers/UtilFile.h"
 #include <fstream>
+#include <iostream>
 
 static Process sServer;
 static Process sSecondServer;
@@ -24,13 +25,14 @@ bool Monitor::init()
     char cmd[256] = "";
     
     ServerNow = 0;
-    auto path = (std::filesystem::path(".\\Server1\\Server.exe"));
+    auto path = (std::filesystem::path(".\\Server1\\"));
     
     if(sPort == "No")
-        sprintf(cmd, ".\\Server1\\Server.exe ");
+        sprintf(cmd, ".\\Server.exe ");
     else
-        sprintf(cmd, ".\\Server1\\Server.exe %s", sPort.c_str());
-    bool ok = sServer.create(cmd, path.parent_path().string()); // launching Server
+        sprintf(cmd, ".\\Server.exe %s", sPort.c_str());
+    bool ok = sServer.create(cmd, path.string()); // launching Server
+    
 
 
     printf(ok ? "monitoring \"%s\"\n" : "error: cannot monitor \"%s\"\n", cmd);
@@ -71,10 +73,10 @@ bool Monitor::init()
 
         char cmd2[256] = "";
 
-        path = (std::filesystem::path(".\\Server2\\Server.exe"));
+        path = (std::filesystem::path(".\\Server2\\"));
 
-        sprintf(cmd2, ".\\Server2\\Server.exe %s", sPort.c_str());
-         ok &= sSecondServer.create(cmd2, path.parent_path().string()); // launching Second Server
+        sprintf(cmd2, ".\\Server.exe %s", sPort.c_str());
+         ok &= sSecondServer.create(cmd2, path.string()); // launching Second Server
          printf(ok ? "monitoring \"%s\"\n" : "error: cannot monitor \"%s\"\n", cmd2);
          sSecondServer.suspend();
     }
@@ -124,16 +126,13 @@ void Monitor::reset()
 
 
     char cmd[256] = "";
-    auto pathToServer = (std::filesystem::path(".\\Server1\\Server.exe"));
+    auto pathToServer = (std::filesystem::path(".\\Server.exe"));
 
-    if (ServerNow) {
-        sprintf(cmd, ".\\Server2\\Server.exe %s", sPort.c_str());
-        pathToServer = (std::filesystem::path(".\\Server2\\Server.exe"));
-    }
-    else {
-        sprintf(cmd, ".\\Server1\\Server.exe %s", sPort.c_str());
-        pathToServer = (std::filesystem::path(".\\Server1\\Server.exe"));
-    }
+    sprintf(cmd, ".\\Server.exe %s", sPort.c_str());
+
+    if (ServerNow)  pathToServer = (std::filesystem::path(".\\Server2\\"));    
+    else            pathToServer = (std::filesystem::path(".\\Server1\\"));
+    
     
     bool ok = sServer.create(cmd, path);
     printf(ok ? "monitoring \"%s\"\n" : "error: cannot monitor \"%s\"\n", cmd);
@@ -173,49 +172,37 @@ void Monitor::terminate() {
 void Monitor::Synchronise() {
 
 
-    std::ifstream file;
-    std::ifstream InSecondfile;
-    std::ofstream OutSecondfile;
+    std::ifstream firstFile;
+    std::ofstream Secondfile;
 
     if (ServerNow) {
-         file = std::ifstream(".\\Server2\\resources\\STATE");
-         InSecondfile = std::ifstream(".\\Server1\\resources\\STATE");
-         OutSecondfile = std::ofstream(".\\Server1\\resources\\STATE", std::ios::app);
+         firstFile = std::ifstream(".\\Server2\\resources\\STATE",std::ios::binary);
+         Secondfile = std::ofstream(".\\Server1\\resources\\STATE", std::ios::app | std::ios::binary);
     }
     else {
-         file = std::ifstream(".\\Server1\\resources\\STATE");
-         InSecondfile = std::ifstream(".\\Server2\\resources\\STATE");
-         OutSecondfile = std::ofstream(".\\Server2\\resources\\STATE",std::ios::app);
+         firstFile = std::ifstream(".\\Server1\\resources\\STATE", std::ios::binary);
+         Secondfile = std::ofstream(".\\Server2\\resources\\STATE",std::ios::app | std::ios::binary);
        
     }
 
     
 
-    if (file) {
+    if (firstFile) {
 
         
         std::string str1;
         std::string str2;
-        int StringCounter = 0;
+        Secondfile.seekp(0, std::ios::end);
+        firstFile.seekg(Secondfile.tellp(), std::ios::beg);
+
+        while (std::getline(firstFile, str1)) {
+            std::cout << "Synchronised " << str1 << std::endl << std::endl;
+            Secondfile.write( (str1 + "\n").c_str(), str1.size() + 1);
+        }
 
         
-
-        while (std::getline(InSecondfile, str2)) {
-            std::getline(file, str1);
-            StringCounter++;
-        }
-
-       
-
-        while (std::getline(file, str1)) {
-            std::cout << "Synchronised " << str1 << std::endl << std::endl;
-            OutSecondfile.write( (str1 + "\n").c_str(), str1.size() + 1);
-        }
-
-        InSecondfile.close();
     }
 
-    OutSecondfile.close();
-    InSecondfile.close();
-    file.close();
+    Secondfile.close();
+    firstFile.close();
 }
